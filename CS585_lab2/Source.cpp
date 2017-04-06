@@ -23,7 +23,7 @@
 using namespace cv;
 using namespace std;
 
-#define PRINT_TIME 100
+#define PRINT_TIME 10
 
 //function declarations
 
@@ -190,10 +190,31 @@ int main()
 "        |                  | ";
 
 
+		string asciiarm = ""
+			"    _______                                                           __\n"
+			"           ~~~~~~~------......_______                         __..--''  \\\n"
+			"                                     ~~~---...________.---'~~~           `.\n"
+			"                                                                           \\\n"
+			"                                                                   __/      `.\n"
+			"                                                                .-' \ `-.     \\\n"
+			"                                                            .  /\   /  / /    /\n"
+			"                                                             `/ /  /  /.~    /\n"
+			"                                                               `-.______.-----.\n"
+			"    `------------------------------.......______                           |~~ `.\n"
+			"                                                ~~--.._                    |___))\n"
+			"                                                       ~--._____________.------'\n";
+
 		if (*max > 0.84 && !printCount){ //anywhere from 0.84 to 0.89 +
 			cout << asciifist << endl;
 			printCount = PRINT_TIME;
 		}
+
+		minMaxLoc(armResult, min, max, minLoc, maxLoc);
+		if (*max > 0.98 && !printCount){ //anywhere from 0.84 to 0.89 +
+			cout << asciiarm << endl;
+			printCount = PRINT_TIME;
+		}
+
 		//----------------
 		//	c) Background differencing
 		//----------------
