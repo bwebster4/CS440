@@ -126,6 +126,7 @@ int main()
 	mySkinDetect(frame0, frame0Skin);
 
 
+
 	while (1)
 	{
 		// read a new frame from video
@@ -147,6 +148,31 @@ int main()
 		//----------------
 		mySkinDetect(frame, frameDest);
 		imshow("SkinDetection", frameDest);
+
+		//------------
+		//  STATIC GESTURE DETECTION
+		//------------
+		//dont edit frame directly
+		Mat handTemplate = cv::imread("Hand.jpg");
+		Mat armTemplate = cv::imread("Arm.jpg");
+		//cv::imshow(armTemplate);
+
+		Mat handResult = Mat::zeros(frame.rows - handTemplate.rows + 1, frame.cols - handTemplate.cols + 1, CV_8UC1);
+		//handResult = Mat::zeros(frame.rows, frame.cols, CV_8UC1);
+		matchTemplate(frame, handTemplate, handResult, CV_TM_CCORR_NORMED);
+
+		Mat armResult = Mat::zeros(frame.rows - armTemplate.rows + 1, frame.cols - armTemplate.cols + 1, CV_8UC1);
+		//armResult = Mat::zeros(frame.rows, frame.cols, CV_8UC1);
+		matchTemplate(frame, armTemplate, armResult, CV_TM_CCORR_NORMED);
+
+
+		double* min = new double();
+		double* max = new double();
+		Point* minLoc = new Point();
+		Point* maxLoc = new Point();
+		minMaxLoc(armResult, min, max, minLoc, maxLoc);
+		cout << min << " " << max << endl;
+
 
 		//----------------
 		//	c) Background differencing
@@ -171,12 +197,16 @@ int main()
 		myMotionEnergy(myMotionHistory, myMH, historyLength);
 
 		erode(myMH, myMH, Mat(), Point(-1, -1), 5);
+		dilate(myMH, myMH, Mat(), Point(-1, -1), 2);
 
-		Rect rect = boundingRect(myMH);
-		rectangle(myMH, rect, Scalar(255, 0, 0), 1, 8, 0);
+		 Rect rect = boundingRect(myMH);
+		 rectangle(myMH, rect, Scalar(255, 0, 0), 1, 8);
+
+		//RotatedRect rect = fitEllipse(myMH);
+		//ellipse(myMH, rect, Scalar(255, 0, 0), 1, 8);
 
 		//bounding box analysis, detects single horizontal wave of a skin-colored object
-		if (rect.area() > 50000 && rect.width > rect.height*1.5) {
+		if (rect.area() > 50000 && rect.width > rect.height*3) {
 			cout << "Gesture detected with bounding box area: " << rect.area() << "\n";
 		}
 
