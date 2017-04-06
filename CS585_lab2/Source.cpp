@@ -1,6 +1,6 @@
 /*	CS585_Lab2.cpp
 *	CS585 Image and Video Computing Fall 2014
-*	
+*
 *	used for:
 *	CS440 Lab: Introduction to OpenCV
 *	--------------
@@ -62,7 +62,7 @@ Function that accumulates the frame differences for a certain number of pairs of
 @param mh Vector of frame difference images
 @param dst The destination grayscale image to store the accumulation of the frame difference images
 */
-void myMotionEnergy(vector<Mat> mh, Mat& dst);
+void myMotionEnergy(vector<Mat> mh, Mat& dst, int length = 3);
 
 int main()
 {
@@ -98,11 +98,13 @@ int main()
 	imshow("MyVideo0", frame0);
 
 	//create a window called "MyVideo"
-	namedWindow("MyVideo", WINDOW_AUTOSIZE);
-	namedWindow("MyVideoMH", WINDOW_AUTOSIZE);
-	namedWindow("Skin", WINDOW_AUTOSIZE);
+	namedWindow("FrameDifference", WINDOW_AUTOSIZE);
+	namedWindow("MotionHistory", WINDOW_AUTOSIZE);
+	namedWindow("SkinDetection", WINDOW_AUTOSIZE);
 
 	vector<Mat> myMotionHistory;
+
+	/*
 	Mat fMH1, fMH2, fMH3;
 	fMH1 = Mat::zeros(frame0.rows, frame0.cols, CV_8UC1);
 	fMH2 = fMH1.clone();
@@ -110,6 +112,15 @@ int main()
 	myMotionHistory.push_back(fMH1);
 	myMotionHistory.push_back(fMH2);
 	myMotionHistory.push_back(fMH3);
+	*/
+	
+	int historyLength = 5;
+	Mat fMH1 = Mat::zeros(frame0.rows, frame0.cols, CV_8UC1);
+	myMotionHistory.push_back(fMH1);
+	for (int i = 1; i < historyLength-1; i++) { //I don't know why it loops until i < historyLength-1 instead of i < historyLength; the array ends up being too large for the latter...
+		Mat fMH2 = fMH1.clone();
+		myMotionHistory.push_back(fMH2);
+	}
 
 	Mat frame0Skin = Mat::zeros(frame0.rows, frame0.cols, CV_8UC1);
 	mySkinDetect(frame0, frame0Skin);
@@ -135,7 +146,7 @@ int main()
 		//	b) Skin color detection
 		//----------------
 		mySkinDetect(frame, frameDest);
-		imshow("Skin", frameDest);
+		imshow("SkinDetection", frameDest);
 
 		//----------------
 		//	c) Background differencing
@@ -147,7 +158,7 @@ int main()
 		frameDifferenced = Mat::zeros(frame.rows, frame.cols, CV_8UC1);
 
 		myFrameDifferencing(frame0Skin, frameDest, frameDifferenced);
-		imshow("MyVideo", frameDifferenced);
+		imshow("FrameDifference", frameDifferenced);
 		myMotionHistory.erase(myMotionHistory.begin());
 		myMotionHistory.push_back(frameDifferenced);
 		Mat myMH = Mat::zeros(frame0.rows, frame0.cols, CV_8UC1);
@@ -157,14 +168,19 @@ int main()
 		//----------------
 
 		//call myMotionEnergy function
-		myMotionEnergy(myMotionHistory, myMH);
-		
+		myMotionEnergy(myMotionHistory, myMH, historyLength);
+
 		erode(myMH, myMH, Mat(), Point(-1, -1), 5);
 
 		Rect rect = boundingRect(myMH);
 		rectangle(myMH, rect, Scalar(255, 0, 0), 1, 8, 0);
 
-		imshow("MyVideoMH", myMH); //show the frame in "MyVideo" window
+		//bounding box analysis, detects single horizontal wave of a skin-colored object
+		if (rect.area() > 50000 && rect.width > rect.height*1.5) {
+			cout << "Gesture detected with bounding box area: " << rect.area() << "\n";
+		}
+
+		imshow("MotionHistory", myMH); //show the frame in "MyVideo" window
 		frame0 = frame;
 		frame0Skin = frameDest;
 		//wait for 'esc' key press for 30ms. If 'esc' key is pressed, break loop
@@ -224,7 +240,19 @@ void myFrameDifferencing(Mat& prev, Mat& curr, Mat& dst) {
 }
 
 //Function that accumulates the frame differences for a certain number of pairs of frames
-void myMotionEnergy(vector<Mat> mh, Mat& dst) {
+void myMotionEnergy(vector<Mat> mh, Mat& dst, int length) {
+	for (int i = 0; i < dst.rows; i++){
+		for (int j = 0; j < dst.cols; j++){
+			for (int k = 0; k < length-1; k++) { //I don't know why it loops until k < length-1 instead of k < length; the array ends up being too large for the latter...
+				if (mh[k].at<uchar>(i, j) == 255) {
+					dst.at<uchar>(i, j) = 255;
+					break;
+				}
+			}
+		}
+	}
+	
+	/*
 	Mat mh0 = mh[0];
 	Mat mh1 = mh[1];
 	Mat mh2 = mh[2];
@@ -236,4 +264,5 @@ void myMotionEnergy(vector<Mat> mh, Mat& dst) {
 			}
 		}
 	}
+	*/
 }
