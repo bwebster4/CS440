@@ -23,6 +23,8 @@
 using namespace cv;
 using namespace std;
 
+#define PRINT_TIME 100
+
 //function declarations
 
 /**
@@ -125,7 +127,7 @@ int main()
 	Mat frame0Skin = Mat::zeros(frame0.rows, frame0.cols, CV_8UC1);
 	mySkinDetect(frame0, frame0Skin);
 
-
+	int printCount = PRINT_TIME;
 
 	while (1)
 	{
@@ -170,10 +172,28 @@ int main()
 		double* max = new double();
 		Point* minLoc = new Point();
 		Point* maxLoc = new Point();
-		minMaxLoc(armResult, min, max, minLoc, maxLoc);
-		cout << min << " " << max << endl;
+		minMaxLoc(handResult, min, max, minLoc, maxLoc);
+		//cout << *max << endl;
+
+		string asciifist = ""
+"      .----.-----.-----.-----.  \n"
+"     /      \     \     \     \\  \n"
+"    |  \/    |     |   __L_____L__  \n"
+"    |   |    |     |  (           \\  \n"
+"    |    \___/    /    \______/    |  \n"
+"    |        \___/\___/\___/       |  \n"
+"     \      \     /               /  \n"
+"      |                        __/  \n"
+"       \_                   __/     \n"
+"        |        |         |          \n"
+"        |                  |        \n"
+"        |                  | ";
 
 
+		if (*max > 0.84 && !printCount){ //anywhere from 0.84 to 0.89 +
+			cout << asciifist << endl;
+			printCount = PRINT_TIME;
+		}
 		//----------------
 		//	c) Background differencing
 		//----------------
@@ -210,6 +230,8 @@ int main()
 			cout << "Gesture detected with bounding box area: " << rect.area() << "\n";
 		}
 
+		if (printCount)
+			printCount--;
 		imshow("MotionHistory", myMH); //show the frame in "MyVideo" window
 		frame0 = frame;
 		frame0Skin = frameDest;
